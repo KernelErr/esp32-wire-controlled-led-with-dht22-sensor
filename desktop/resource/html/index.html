@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+    integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+  <style>
+    html {
+      font-family: Arial;
+      display: inline-block;
+      margin: 0px auto;
+      text-align: center;
+    }
+
+    p {
+      font-size: 1.3rem;
+      margin-block-start: 10px;
+      margin-block-end: 10px;
+    }
+
+    .units {
+      font-size: 1.2rem;
+      vertical-align: middle;
+    }
+
+    .dht-labels {
+      font-size: 1.3rem;
+      vertical-align: middle;
+    }
+
+    #temperature {
+      font-size: 1.3rem;
+      vertical-align: middle;
+    }
+
+    #humidity {
+      font-size: 1.3rem;
+      vertical-align: middle;
+    }
+
+    .inputContainer{
+      display: flex;
+      justify-content: center;
+    }
+
+    .inputContainer div{
+      float:left;
+      margin-left: 10px;
+    }
+  </style>
+  <link rel="stylesheet" href="../css/switch_style.css" media="screen" type="text/css" />
+</head>
+
+<body>
+  <p>
+    <i class="fas fa-thermometer-half" style="color:#059e8a;font-size: 20px;"></i>
+    <span class="dht-labels">Temperature</span>
+    <span id="temperature">%TEMPERATURE%</span>
+    <sup class="units">&deg;C</sup>
+  </p>
+  <p>
+    <i class="fas fa-tint" style="color:#00add6;font-size: 20px;"></i>
+    <span class="dht-labels">Humidity</span>
+    <span id="humidity">%HUMIDITY%</span>
+    <sup class="units">%</sup>
+  </p>
+  <p style="margin-block-start: 15px;">
+    <div class="inputContainer">
+      <div class="div-inline">
+        <input type="color" id="ledcolor" style="width:200px;" onchange="changeColor()" />
+      </div>
+      <div class="div-inline" style="position: relative;top: -2px;">
+        <input class='tgl tgl-flat' id='rainbowSwitch' type='checkbox' onchange="changeRainbow()">
+        <label class='tgl-btn' for='rainbowSwitch'></label>
+      </div>
+    </div>
+  </p>
+</body>
+<script>
+  const { ipcRenderer } = require('electron');
+  setInterval(function () {
+    temperature = ipcRenderer.sendSync('getTemperature');
+    document.getElementById("temperature").innerHTML = temperature;
+  }, 500);
+
+  setInterval(function () {
+    humidity = ipcRenderer.sendSync('getHumidity');
+    document.getElementById("humidity").innerHTML = humidity;
+  }, 500);
+
+  function hex2rgb(hexColor) {
+    if (hexColor.substr(0, 1) == "#") hexColor = hexColor.substring(1);
+    hexColor = hexColor.toLowerCase();
+    b = new Array();
+    for (x = 0; x < 3; x++) {
+      b[0] = hexColor.substr(x * 2, 2)
+      b[3] = "0123456789abcdef";
+      b[1] = b[0].substr(0, 1)
+      b[2] = b[0].substr(1, 1)
+      b[20 + x] = b[3].indexOf(b[1]) * 16 + b[3].indexOf(b[2])
+    }
+    return b[20] + "-" + b[21] + "-" + b[22];
+  }
+
+  function changeColor() {
+    var colorpicker = document.getElementById("ledcolor");
+    console.log(hex2rgb(colorpicker.value));
+    ipcRenderer.send('changeLEDColor', hex2rgb(colorpicker.value));
+  }
+
+  function changeRainbow() {
+    var modeSwitch = document.getElementById("rainbowSwitch");
+    if(modeSwitch.checked){
+      ipcRenderer.send('changeRainbow', 1);
+    } else {
+      ipcRenderer.send('changeRainbow', 0);
+    }
+  }
+</script>
+
+</html>
